@@ -1,0 +1,34 @@
+[
+    {
+        "id": 0,
+        "rut": "12345",
+        "nombre": "pepito",
+        "apellido": "gonzales",
+        "password": "asd123",
+        "tipoUsuario": "encargado"
+    },
+    {
+        "id": 1,
+        "rut": "678910",
+        "nombre": "pablito",
+        "apellido": "araya",
+        "password": "asd456",
+        "tipoUsuario": "solicitante"
+    },
+    {
+        "id": 2,
+        "rut": "89899",
+        "nombre": "pablo",
+        "apellido": "marmol",
+        "password": "asd123",
+        "tipoUsuario": "encargado"
+    },
+    {
+        "id": 3,
+        "rut": "77889",
+        "nombre": "palito",
+        "apellido": "palon",
+        "password": "5588",
+        "tipoUsuario": "solicitante"
+    }
+]
