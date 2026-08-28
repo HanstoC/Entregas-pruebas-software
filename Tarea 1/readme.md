@@ -1,7 +1,7 @@
 # Tarea 1
 Sección del repositorio destinada para la tarea 1 de la asignatura pruebas de software (INF331)
 * Nicolás Muñoz Ramírez Rol: 202104641-0
-* Sergio Rojas Rol:
+* Sergio Rojas Rol: 202273619-4
 * Hans Toledo Rol: 201704591-4
 
 
