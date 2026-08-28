@@ -50,9 +50,19 @@ Dento del programa, se encuentran dos usuarios creados y dos herramientas de for
   contraseña: asd456
 
   ```
-
+## Consideraciones:
+- El usuario solo podrá solicitar una herramienta a la vez, si es que solicita alguna otra herramienta teniendo alguna solicitud activa está no se podrá realizar.
+- El usuario puede cancelar su propia solicitud en cualquiero momento.
+- Las reservas solo podrán ser de un solo día
+- la opción consultar prestamos entrega la lista historica de prestamos que han ocurrido en el departamento
+- la opcion revisar solicitudes, solo muestra solicitudes que tienen fecha superior o igual a la de hoy para poder gestionarlas.
+- cada reserva puede tener 3 estados:
+    - Activa: la reserva esta correctamente realizada y esta esperando a que se concrete el prestamo
+    - Cancelada: La máquina no estaba disponible por lo que se cancela automaticamente
+    - enEjecucion: La maquina reservada se encuentra prestada por lo que la reserva se encuentra en ejecución
 
 ## Dependencias utilizadas:
 
 - json ( integrada en las librerias por defecto )
+- datetime ( integrada en las librerias por defecto )
 
