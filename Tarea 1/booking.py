@@ -1,29 +1,60 @@
 import json
 from datetime import datetime
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - [%(levelname)s] - %(message)s",
+    handlers=[
+        logging.FileHandler("app.log", encoding="utf-8"),
+        logging.StreamHandler()
+    ]
+)
+
+def leerJson(path):
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        logging.error(f"Archivo no encontrado en {path}")
+        return []
+    except json.JSONDecodeError:
+        logging.error(f"Error al decodificar JSON en el archivo {path}")
+        return []
+
+def guardarJson(path, data):
+    try:
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error(f"Error al guardar JSON en el archivo {path}: {e}")
+        return False
+
+#usuarios
 
 def leerUsuarios():
-    with open("datos/users.json", "r") as file:
-        data = json.load(file)
-    return data
+    return leerJson("datos/users.json")
 
 def agregarUsuario(nombre, rut, apellido, contrasena, tipoUsuario):
     usuariosActuales=leerUsuarios()
     nuevoId = usuariosActuales[-1]["id"] + 1
     nuevoUsuario = {"id": nuevoId, "rut":rut, "nombre":nombre, "apellido":apellido, "password":contrasena,"tipoUsuario":tipoUsuario}
     usuariosActuales.append(nuevoUsuario)
-    with open("datos/users.json","w") as file:
-        json.dump(usuariosActuales,file,indent=4,ensure_ascii=False)
-    print("Usuario registrado exitosamente con el id: " + str(nuevoId))
+    if guardarJson("datos/users.json", usuariosActuales):
+        logging.info("Usuario registrado exitosamente con el id: " + str(nuevoId))
+
+#Herramientas
 
 def leerHerramientas():
-    with open("datos/tools.json", "r") as file:
-        data = json.load(file)
-    return data
-
+    return leerJson("datos/tools.json")
 
 def mostrarHerramientas():
-    with open("datos/tools.json", "r") as file:
-        data = json.load(file)
+    data = leerHerramientas()
+    if not data:
+        logging.info("No hay herramientas registradas.")
+        return
+    
     print("Lista de herramientas registradas: \n")
     for i in data:
         print(f"Id herramienta: {i["id"]}" )
@@ -37,9 +68,8 @@ def agregarHerramienta(nombre, tipo):
         nuevaHerramienta = {"id": nuevoId, "nombre":nombre, "tipo":tipo}
         herramientasActuales.append(nuevaHerramienta)
         print(nuevoId)
-        with open("datos/tools.json","w") as file:
-            json.dump(herramientasActuales,file,indent=4,ensure_ascii=False)
-        print("Herramienta registrada exitosamente con el id: " + str(nuevoId))
+        if guardarJson("datos/tools.json", herramientasActuales):
+            logging.info(f"Herramienta {nombre} registrada exitosamente con el id: {nuevoId}")
 
 def herramientasDisponibles(fechaConsulta):
     listaHerramientas = leerHerramientas()
@@ -56,11 +86,11 @@ def herramientasDisponibles(fechaConsulta):
         if j["id"] not in idReservados:
             disponibles.append(j)
 
-    print("A continuacion se presentan las herramienta disponibles para prestamo en la fecha seleccionada: ")
     if not disponibles:
-        print("No existe disponibilidad de herramientas para la fecha seleccionada")
+        logging.warning(f"No existe disponibilidad de herramientas para la fecha: {fechaConsulta}")
         return None
     else:
+        print("A continuacion se presentan las herramienta disponibles para prestamo en la fecha seleccionada: ")
         for herramienta in disponibles:
             print(f"Id herramienta: {herramienta["id"]}" )
             print(f"Nombre herramienta: {herramienta["nombre"]}")
@@ -68,11 +98,10 @@ def herramientasDisponibles(fechaConsulta):
             print("---------------o---------------")
     return disponibles
 
+#Reservas
 
 def leerReservas():
-    with open("datos/bookings.json","r") as file:
-        data = json.load(file)
-    return data
+    return leerJson("datos/bookings.json")
 
 def mostrarReservas():
     data = leerReservas()
@@ -90,35 +119,52 @@ def revisarSolicitudes():
     data = leerReservas()
     hoy = datetime.now()
     for i in data:
-        if datetime.strptime(i["fecha"],"%d-%m-%Y") >= hoy:
-            nombreHerramienta = busqueda(leerHerramientas(),"id",i["idHerramienta"])
-            print(f"Id Reserva: {i["idReserva"]}" )
-            print(f"Id Herramienta: {i["idHerramienta"]}" )
-            print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
-            print(f"Fecha Solicitud: {i["fecha"]}")
-            print("---------------o---------------")
-        else:
+        try:
+            fechaReserva = datetime.strptime(i["fecha"], "%d-%m-%Y")
+            if fechaReserva >= hoy:
+                nombreHerramienta = busqueda(leerHerramientas(),"id",i["idHerramienta"])
+                print(f"Id Reserva: {i["idReserva"]}" )
+                print(f"Id Herramienta: {i["idHerramienta"]}" )
+                print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
+                print(f"Fecha Solicitud: {i["fecha"]}")
+                print("---------------o---------------")
+        except ValueError:
+            logging.error(f"Formato de fecha inválido para la reserva con ID: {i['idReserva']}")
             continue
 
 def modificarSolicitudes(idSolicitud, modificacion, tipo):
     data = leerReservas()
+    encontrado = False
     for i in data:
         if i["idReserva"] == idSolicitud:
             i[tipo] = modificacion ##se puede modificar fecha y estado
-    
+            encontrado = True
+            break
+    if encontrado:
+        guardarJson("datos/bookings.json", data)
+        logging.info(f"Reserva con ID {idSolicitud} modificada exitosamente")
+    else:
+        logging.warning(f"No se encontró la reserva con ID {idSolicitud} para modificar")
 
 
 
 def mostrarReservasPersonales(rut):
     data = leerReservas()
+    reservasUsuario=[]
     for i in data:
         if i["rutSolicitante"] == rut:
-            nombreHerramienta = busqueda(leerHerramientas(),"id",i["idHerramienta"])
-            print(f"Id Reserva: {i["idReserva"]}" )
-            print(f"Id Herramienta: {i["idHerramienta"]}" )
-            print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
-            print(f"Fecha Solicitud: {i["fecha"]}")
-            print("---------------o---------------")
+            reservasUsuario.append(i)
+    if not reservasUsuario:
+        logging.info(f"No hay reservas registradas para el usuario con RUT: {rut}")
+        return
+    
+    for i in reservasUsuario:
+        nombreHerramienta = busqueda(leerHerramientas(),"id",i["idHerramienta"])
+        print(f"Id Reserva: {i["idReserva"]}" )
+        print(f"Id Herramienta: {i["idHerramienta"]}" )
+        print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
+        print(f"Fecha Solicitud: {i["fecha"]}")
+        print("---------------o---------------")
 
 
 
@@ -127,17 +173,17 @@ def registrarReserva(fecha,usuario, herramienta):
     nuevoId = reservasActuales[-1]["idReserva"] + 1
     nuevaReserva = {"idReserva": nuevoId, "idHerramienta":herramienta, "fecha":fecha, "rutSolicitante":usuario, "estadoSolicitud":"Activa"}
     reservasActuales.append(nuevaReserva)
-    with open("datos/bookings.json","w") as file:
-        json.dump(reservasActuales,file,indent=4,ensure_ascii=False)
-    print("Reserva registrada exitosamente con el id: " + str(nuevoId))
-
+    if guardarJson("datos/bookings.json", reservasActuales):
+        logging.info(f"Reserva registrada exitosamente con el id: {nuevoId}")
+    else:
+        logging.error("Error al registrar la reserva")
 
 
 def busqueda(valores, campo ,porEncontrar):
     for k in valores:
-        if k[campo] == porEncontrar:
+        if str(k[campo]) == str(porEncontrar):
             return k
-    print("Lo siento, esa informacion no se encuentra en la base de datos, reintentelo")
+    logging.warning("Lo siento, esa informacion no se encuentra en la base de datos, reintentelo")
     return None
 
 def inicioSesion():
@@ -146,9 +192,10 @@ def inicioSesion():
     password = input("Por favor ingresa tu password: ")
     dataUsuario = busqueda(data,"rut",rut)
     if dataUsuario["password"] == password:
-        print("Password correcto")
+        logging.info("Inicio de sesión exitoso")
         return(dataUsuario)
-    print("Password incorrecto")
+    logging.warning("Intento de inicio de sesión fallido: contraseña incorrecta")
+    print("Credenciales incorrecto")
 
 
 def bienvenida():
@@ -172,6 +219,7 @@ def main():
             print("¿Que te gustaria hacer?")
             print("\n 1.- Registrar usuarios \n 2.-Registrar equipo nuevo \n 3.-Consultar equipos \n 4.- Consultar prestamos \n 5.- Revisar Solicitudes \n 6.- Registrar entregas, devoluciones o cancelaciones \n 7.- Salir")
             seleccion = input("\n Ingrese una opción: ")
+
             if seleccion == "1":
                 nombre = input("Nombre: ").strip()
                 rut = input("RUT (sin puntos ni guión): ").strip()
@@ -182,7 +230,7 @@ def main():
                     if tipo in ["encargado", "solicitante"]:
                         tipoUsuario = tipo
                         break
-                    print("Tipo no válido. Favor escriba encargado o solicitante")
+                    logging.warning("Tipo no válido. Favor escriba encargado o solicitante")
 
                 agregarUsuario(nombre, rut, apellido, password, tipoUsuario)
                 input("\nPresiona Enter para continuar...")
@@ -233,6 +281,7 @@ def main():
                 input("\nPresiona Enter para continuar...")
 
             elif seleccion == "7":
+                logging.info("Sesión finalizada por el usuario")
                 break
         else:
             print("+++++++++++++++++++++++++++++++++++++ \n")
@@ -247,14 +296,15 @@ def main():
                 input("\nPresiona Enter para continuar...")
 
             elif seleccion == "2":
-                fechaReserva = input("Para realizar una reserva ingresa la fecha (dd-mm-yy): ")
-                estado = herramientasDisponibles(fechaReserva)
-                if estado  is not None:
+                fechaReserva = input("Para realizar una reserva ingresa la fecha (dd-mm-yy): ").strip()
+                disponibles = herramientasDisponibles(fechaReserva)
+                if disponibles  is not None:
                     idHerramienta = input("Indique el Id de la herramienta a reservar: ")
                     registrarReserva(fechaReserva,dataUsuario["rut"], idHerramienta)
             
                 input("\nPresiona Enter para continuar...")
             elif seleccion == "3":
+                logging.info("Sesión finalizada por el usuario")
                 break
 
 
