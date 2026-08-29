@@ -183,7 +183,7 @@ def busqueda(valores, campo ,porEncontrar):
     for k in valores:
         if str(k[campo]) == str(porEncontrar):
             return k
-    logging.warning("Lo siento, esa informacion no se encuentra en la base de datos, reintentelo")
+    logging.warning("Lo siento, esa informacion no se encuentra en la base de datos")
     return None
 
 def inicioSesion():
@@ -191,11 +191,12 @@ def inicioSesion():
     rut = input("Por favor ingresa tu rut: ")
     password = input("Por favor ingresa tu password: ")
     dataUsuario = busqueda(data,"rut",rut)
-    if dataUsuario["password"] == password:
+    if dataUsuario and dataUsuario["password"] == password:
         logging.info("Inicio de sesión exitoso")
         return(dataUsuario)
-    logging.warning("Intento de inicio de sesión fallido: contraseña incorrecta")
-    print("Credenciales incorrecto")
+    logging.warning(f"Intento de inicio de sesión fallido para RUT: {rut}")
+    print("Credenciales incorrectas")
+    return None
 
 
 def bienvenida():
@@ -211,6 +212,9 @@ def bienvenida():
 def main():
     bienvenida()
     dataUsuario = inicioSesion()
+    if not dataUsuario:
+        logging.error("No se pudo iniciar sesión. Terminando el programa.")
+        return
     while True:
         if dataUsuario["tipoUsuario"] == "encargado":
             print("+++++++++++++++++++++++++++++++++++++ \n")
