@@ -1,6 +1,17 @@
 import json
 from datetime import datetime
 import logging
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="https://83f8a0c480c3c0d7cf76ce8db73c4278@o4511974951550976.ingest.us.sentry.io/4511974976782336",
+    send_default_pii=True,
+    enable_logs=True,
+    traces_sample_rate=1.0,
+    profile_session_sample_rate=1.0,
+)
+
+division_by_zero = 1 / 0
 
 logging.basicConfig(
     level=logging.INFO,
