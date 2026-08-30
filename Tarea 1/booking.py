@@ -2,13 +2,16 @@ import json
 from datetime import datetime
 import logging
 import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+sentry_logging = LoggingIntegration(level=logging.INFO , event_level=logging.ERROR)
 
 sentry_sdk.init(
     dsn="https://83f8a0c480c3c0d7cf76ce8db73c4278@o4511974951550976.ingest.us.sentry.io/4511974976782336",
+    integrations=[sentry_logging],
     send_default_pii=True,
-    enable_logs=True,
     traces_sample_rate=1.0,
-    profile_session_sample_rate=1.0,
+    profiles_sample_rate=1.0,
 )
 
 
@@ -21,9 +24,6 @@ logging.basicConfig(
     ]
 )
 
-sentry_sdk.profiler.start_profiler()
-
-division_by_zero = 1 / 0
 
 def leerJson(path):
     try:
@@ -327,6 +327,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        logging.critical(f"Error fatal no controlado: {e}")
+    finally:
+        sentry_sdk.flush(timeout=2.0)
 
-sentry_sdk.profiler.stop_profiler()
