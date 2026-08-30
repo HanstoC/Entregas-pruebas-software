@@ -27,6 +27,12 @@ Luego visualizaras las carpetas correspondientes a cada una de las tareas, en es
 cd Tarea 1
 
 ```
+Para la correcta ejecución del programa es necesario instalar "sentry-sdk"
+```
+pip install "sentry-sdk"
+
+```
+
 ejecuta el archivo llamado "booking.py"
 
 ```
@@ -63,6 +69,8 @@ Dento del programa, se encuentran dos usuarios creados y dos herramientas de for
 
 ## Dependencias utilizadas:
 
+
+- sentry (Necesario instalar)
 - json ( integrada en las librerias por defecto )
 - datetime ( integrada en las librerias por defecto )
 
