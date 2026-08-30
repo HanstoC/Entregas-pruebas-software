@@ -11,7 +11,6 @@ sentry_sdk.init(
     profile_session_sample_rate=1.0,
 )
 
-division_by_zero = 1 / 0
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,6 +22,8 @@ logging.basicConfig(
 )
 
 sentry_sdk.profiler.start_profiler()
+
+division_by_zero = 1 / 0
 
 def leerJson(path):
     try:
