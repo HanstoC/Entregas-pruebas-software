@@ -22,6 +22,8 @@ logging.basicConfig(
     ]
 )
 
+sentry_sdk.profiler.start_profiler()
+
 def leerJson(path):
     try:
         with open(path, "r", encoding="utf-8") as file:
@@ -325,3 +327,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+sentry_sdk.profiler.stop_profiler()
