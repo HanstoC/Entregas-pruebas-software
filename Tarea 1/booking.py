@@ -56,7 +56,7 @@ def agregarUsuario(nombre, rut, apellido, contrasena, tipoUsuario):
     nuevoUsuario = {"id": nuevoId, "rut":rut, "nombre":nombre, "apellido":apellido, "password":contrasena,"tipoUsuario":tipoUsuario}
     usuariosActuales.append(nuevoUsuario)
     if guardarJson("datos/users.json", usuariosActuales):
-        logging.info("Usuario registrado exitosamente con el id: " + str(nuevoId))
+        logging.info(f"Usuario registrado exitosamente con el id: {nuevoId}")
 
 #Herramientas
 
@@ -90,10 +90,11 @@ def herramientasDisponibles(fechaConsulta):
     listaReservas = leerReservas()
     idReservados = []
 
+    estadosOcupados = ["Solicitud Realizada", "Aprobada", "Entregado", "Atraso"]
+
     for i in listaReservas:
-        if i["fecha"] == fechaConsulta:
-            if i["estadoSolicitud"]=="Activa":
-                idReservados.append(i["idHerramienta"])
+        if i["fecha"] == fechaConsulta and i["estadoSolicitud"] in estadosOcupados:
+            idReservados.append(i["idHerramienta"])
 
     disponibles = []
     for j in listaHerramientas:
@@ -117,34 +118,56 @@ def herramientasDisponibles(fechaConsulta):
 def leerReservas():
     return leerJson("datos/bookings.json")
 
+def actualizarAtrasos():
+    data= leerReservas()
+    modificado = False
+    hoy = datetime.now()
+    valorMulta = 5000
+
+    for i in data:
+        if i["estadoSolicitud"] in ["Entregado", "Atraso"]:
+            try:
+                fechaLimite = datetime.strptime(i["fechaEntregaEsperada"], "%d-%m-%Y")
+                if hoy > fechaLimite:
+                    diasAtraso = (hoy - fechaLimite).days
+                    if diasAtraso > 0:
+                        i["estadoSolicitud"] = "Atraso"
+                        i["penalizacion"] = diasAtraso * valorMulta
+                        modificado = True
+            except ValueError:
+                continue
+    if modificado:
+        guardarJson("datos/bookings.json", data)
+    return data
+
 def mostrarReservas():
-    data = leerReservas()
+    data = actualizarAtrasos()
     for i in data:
         nombreHerramienta = busqueda(leerHerramientas(),"id",i["idHerramienta"])
         print(f"Id Reserva: {i["idReserva"]}" )
         print(f"Id Herramienta: {i["idHerramienta"]}" )
         print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
-        print(f"Fecha Solicitud: {i["fecha"]}")
+        print(f"Rut solicitante: {i["rutSolicitante"]}")
+        print(f"Fecha reserva: {i["fecha"]}")
+        print(f"Fecha entrega esperada: {i["fechaEntregaEsperada"]}" )
+        print(f"Fecha devolucion real: {i["fechaDevolucionReal"]}")
         print(f"Estado solicitud: {i["estadoSolicitud"]}")
+        print(f"Penalizacion: ${i.get("penalizacion", 0)}")
         print("---------------o---------------")
 
 
 def revisarSolicitudes():
-    data = leerReservas()
-    hoy = datetime.now()
+    data = actualizarAtrasos()
     for i in data:
-        try:
-            fechaReserva = datetime.strptime(i["fecha"], "%d-%m-%Y")
-            if fechaReserva >= hoy:
-                nombreHerramienta = busqueda(leerHerramientas(),"id",i["idHerramienta"])
-                print(f"Id Reserva: {i["idReserva"]}" )
-                print(f"Id Herramienta: {i["idHerramienta"]}" )
-                print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
-                print(f"Fecha Solicitud: {i["fecha"]}")
-                print("---------------o---------------")
-        except ValueError:
-            logging.error(f"Formato de fecha inválido para la reserva con ID: {i['idReserva']}")
-            continue
+        if i["estadoSolicitud"] == "Solicitud Realizada":
+            nombreHerramienta = busqueda(leerHerramientas(),"id",i["idHerramienta"])
+            print(f"Id Reserva: {i["idReserva"]}" )
+            print(f"Id Herramienta: {i["idHerramienta"]}" )
+            print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
+            print(f"Rut solicitante: {i["rutSolicitante"]}")
+            print(f"Fecha Solicitud: {i["fecha"]}")
+            print("---------------o---------------")
+  
 
 def modificarSolicitudes(idSolicitud, modificacion, tipo):
     data = leerReservas()
@@ -163,7 +186,7 @@ def modificarSolicitudes(idSolicitud, modificacion, tipo):
 
 
 def mostrarReservasPersonales(rut):
-    data = leerReservas()
+    data = actualizarAtrasos()
     reservasUsuario=[]
     for i in data:
         if i["rutSolicitante"] == rut:
@@ -177,21 +200,43 @@ def mostrarReservasPersonales(rut):
         print(f"Id Reserva: {i["idReserva"]}" )
         print(f"Id Herramienta: {i["idHerramienta"]}" )
         print(f"Nombre herramienta: {nombreHerramienta["nombre"]}")
-        print(f"Fecha Solicitud: {i["fecha"]}")
+        print(f"Rut solicitante: {i["rutSolicitante"]}")
+        print(f"Fecha reserva: {i["fecha"]}")
+        print(f"Fecha entrega esperada: {i["fechaEntregaEsperada"]}" )
+        print(f"Fecha devolucion real: {i["fechaDevolucionReal"]}")
+        print(f"Estado solicitud: {i["estadoSolicitud"]}")
+        print(f"Penalizacion: ${i.get("penalizacion", 0)}")
         print("---------------o---------------")
 
 
 
-def registrarReserva(fecha,usuario, herramienta):
+def registrarReserva(fechaReserva, fechaEntrega ,usuario, herramienta):
     reservasActuales = leerReservas()
     nuevoId = reservasActuales[-1]["idReserva"] + 1
-    nuevaReserva = {"idReserva": nuevoId, "idHerramienta":herramienta, "fecha":fecha, "rutSolicitante":usuario, "estadoSolicitud":"Activa"}
+    nuevaReserva = {"idReserva": nuevoId, "idHerramienta":herramienta,"rutSolicitante":usuario, "fecha":fechaReserva,"fechaEntregaEsperada":fechaEntrega,"fechaDevolucionReal": None , "estadoSolicitud":"Solicitud Realizada","penalizacion":0}
     reservasActuales.append(nuevaReserva)
     if guardarJson("datos/bookings.json", reservasActuales):
         logging.info(f"Reserva registrada exitosamente con el id: {nuevoId}")
     else:
         logging.error("Error al registrar la reserva")
 
+def cambiarEstadoSolicitud(idSolicitud, estadoNuevo):
+    data = leerReservas()
+    encontrado = False
+    for i in data:
+        if str(i["idReserva"]) == str(idSolicitud):
+            i["estadoSolicitud"] = estadoNuevo
+            if estadoNuevo == "Devuelto":
+                i["fechaDevolucionReal"] = datetime.now().strftime("%d-%m-%Y")
+            encontrado = True
+            break
+    if encontrado:
+        guardarJson("datos/bookings.json",data)
+        logging.info(f"Reserva ID {idSolicitud} actualizada a estado {estadoNuevo}")
+    else:
+        logging.warning(f"No se encontro la reserva con ID {idSolicitud}")
+
+#utilidades
 
 def busqueda(valores, campo ,porEncontrar):
     for k in valores:
@@ -275,27 +320,24 @@ def main():
                 input("\nPresiona Enter para continuar...")
 
 
-            elif seleccion == "6": #Los estados pueden ser: activa, cancelada, enEjecucion. 
+            elif seleccion == "6": #Los estados pueden ser:  aprobado, rechazado, entregado (equipo entregado al usuario), devuelto (equipo fue devuelto) o cancelado
                 idSolicitud = input("favor ingrese la ID de la reserva a modificar")
-                parametro = input("¿qué parámetro te gustaria modificar? (fecha o estado)").lower().strip()
-                if parametro == "fecha":
-                    ##verificar que la fecha sea mayor o igual ala de hoy
-                    fecha = input("Ingrese la nueva fecha (dd-mm-yy): ")
-                    while fecha < datetime.now():
-                        print("favor ingrese una fecha válida ")
-                        fecha = input("Ingrese la nueva fecha (dd-mm-yy): ")
-                    
-                    modificarSolicitudes(idSolicitud,fecha,"fecha")
+                print("Seleccione el nuevo estado:")
+                print("\n 1.- Aprobado \n 2.- Rechazado \n 3.- Entregado (equipo entregado al usuario) \n 4.- Devuelto (equipo fue devuelto) \n 5.- Cancelado")
+                opcionEstado = input("Opcion: ").strip()
 
-                if parametro == "estado":
-                    estado = input("Seleccione un número para el estado de la solicitud: \n 1.- Activa \n 2,- Cancelada \n 3.-en Ejecucion")
-                    if estado == "1":
-                        modificarSolicitudes(idSolicitud,"Activa","estadoSolicitud")
-                    elif estado == "2":
-                        modificarSolicitudes(idSolicitud,"Cancelada","estadoSolicitud")
-                    elif estado == "3":
-                        modificarSolicitudes(idSolicitud,"enEjecucion","estadoSolicitud")
-
+                if opcionEstado == "1":
+                    cambiarEstadoSolicitud(idSolicitud,"Aprobado")
+                elif opcionEstado == "2":
+                    cambiarEstadoSolicitud(idSolicitud,"Rechazado")
+                elif opcionEstado == "3":
+                    cambiarEstadoSolicitud(idSolicitud,"Entregado")
+                elif opcionEstado == "4":
+                    cambiarEstadoSolicitud(idSolicitud,"Devuelto")
+                elif opcionEstado == "5":
+                    cambiarEstadoSolicitud(idSolicitud,"Cancelado")
+                else:
+                    print("opcion no valida, reintente \n")
                 input("\nPresiona Enter para continuar...")
 
             elif seleccion == "7":
@@ -315,10 +357,11 @@ def main():
 
             elif seleccion == "2":
                 fechaReserva = input("Para realizar una reserva ingresa la fecha (dd-mm-yy): ").strip()
+                fechaEntrega = input("Ingrese la fecha de devolución(dd-mm-yy): ").strip()
                 disponibles = herramientasDisponibles(fechaReserva)
                 if disponibles  is not None:
                     idHerramienta = input("Indique el Id de la herramienta a reservar: ")
-                    registrarReserva(fechaReserva,dataUsuario["rut"], idHerramienta)
+                    registrarReserva(fechaReserva,fechaEntrega,dataUsuario["rut"], idHerramienta)
             
                 input("\nPresiona Enter para continuar...")
             elif seleccion == "3":

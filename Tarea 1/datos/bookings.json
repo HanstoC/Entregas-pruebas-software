@@ -2,15 +2,21 @@
     {
         "idReserva": 0,
         "idHerramienta": 0,
-        "fecha": "30-08-2026",
         "rutSolicitante": "678910",
-        "estadoSolicitud": "Activa"
+        "fecha": "01-09-2026",
+        "fechaEntregaEsperada": "05-09-2026",
+        "fechaDevolucionReal": null,
+        "estadoSolicitud": "Solicitud Realizada",
+        "penalizacion": 0
     },
     {
         "idReserva": 1,
-        "idHerramienta": "1",
-        "fecha": "30-08-2026",
+        "idHerramienta": 1,
         "rutSolicitante": "678910",
-        "estadoSolicitud": "Activa"
+        "fecha": "30-08-2026",
+        "fechaEntregaEsperada": "04-09-2026",
+        "fechaDevolucionReal": null,
+        "estadoSolicitud": "Aprobado",
+        "penalizacion": 0
     }
 ]
