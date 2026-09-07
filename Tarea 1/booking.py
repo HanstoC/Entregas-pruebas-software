@@ -276,6 +276,15 @@ def cancelarReservaUsuario(rut):
     else:
         print("\nNo se encontró ninguna reserva válida con ese ID.")
 
+def tieneReservaActiva(rut):
+    listaReservas = actualizarAtrasos()
+    estadosActivos = ["Solicitud Realizada", "Aprobado", "Entregado", "Atraso"]
+    
+    for r in listaReservas:
+        if str(r["rutSolicitante"]) == str(rut) and r["estadoSolicitud"] in estadosActivos:
+            return True
+    return False
+
 #utilidades
 
 def busqueda(valores, campo ,porEncontrar):
@@ -396,12 +405,16 @@ def main():
                 input("\nPresiona Enter para continuar...")
 
             elif seleccion == "2":
-                fechaReserva = input("Para realizar una reserva ingresa la fecha (dd-mm-yy): ").strip()
-                fechaEntrega = input("Ingrese la fecha de devolución(dd-mm-yy): ").strip()
-                disponibles = herramientasDisponibles(fechaReserva)
-                if disponibles  is not None:
-                    idHerramienta = input("Indique el Id de la herramienta a reservar: ")
-                    registrarReserva(fechaReserva,fechaEntrega,dataUsuario["rut"], idHerramienta)
+                if tieneReservaActiva(dataUsuario["rut"]):
+                    print("\nYa tienes una reserva o préstamo activo.")
+                    print("Debes devolver la herramienta o esperar a que finalice antes de solicitar otra.")
+                else:
+                    fechaReserva = input("Para realizar una reserva ingresa la fecha (dd-mm-yy): ").strip()
+                    fechaEntrega = input("Ingrese la fecha de devolución(dd-mm-yy): ").strip()
+                    disponibles = herramientasDisponibles(fechaReserva)
+                    if disponibles  is not None:
+                        idHerramienta = input("Indique el Id de la herramienta a reservar: ")
+                        registrarReserva(fechaReserva,fechaEntrega,dataUsuario["rut"], idHerramienta)
             
                 input("\nPresiona Enter para continuar...")
             elif seleccion == "3":
