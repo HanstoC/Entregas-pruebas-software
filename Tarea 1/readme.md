@@ -69,7 +69,7 @@ Dento del programa, se encuentran dos usuarios creados y dos herramientas de for
   - Entregado: La herramienta fue físicamente prestada al usuario y la reserva se encuentra actualmente en curso.
   - Atraso: Estado automático asignado por el sistema cuando la herramienta no ha sido devuelta y la fecha de entrega esperada ya venció. En este estado se calcula una penalización monetaria por cada día de retraso.
   - Devuelto: La herramienta fue restituida con éxito por el usuario. Registra la fechaDevolucionReal y finaliza la reserva.
-  - Cancelado: La solicitud fue anulada por el propio usuario o cancelada automáticamente por el sistema si no se pudo concretar.
+  - Cancelado: La solicitud fue anulada por el propio usuario o cancelada por el encargado.
   - Rechazado: La solicitud fue denegada por el Encargado durante el proceso de revisión.
 
 ## Dependencias utilizadas:
