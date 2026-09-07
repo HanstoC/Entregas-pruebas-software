@@ -25,19 +25,25 @@ git clone https://github.com/HanstoC/Entregas-pruebas-software.git
 Luego visualizaras las carpetas correspondientes a cada una de las tareas, en este caso Tarea 1
 ```
 cd Tarea 1
-
 ```
-Para la correcta ejecución del programa es necesario instalar "sentry-sdk"
+Para la correcta ejecución del programa es necesario instalar "sentry-sdk":
+
+1. Crear el entorno virtual de python:
+```bash
+python3 -m venv venv
+````
+2. Activar el entorno:
+```bash
+source venv/bin/activate
+````
+3. Instalar librerías dentro del entorno:
 ```
 pip install "sentry-sdk"
-
 ```
-
-ejecuta el archivo llamado "booking.py"
-
+## Ejecución
+Ejecutar el archivo llamado "booking.py"
 ```
-py booking.py
-
+python3 booking.py
 ```
 
 ## Dentro del programa
