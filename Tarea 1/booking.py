@@ -236,6 +236,46 @@ def cambiarEstadoSolicitud(idSolicitud, estadoNuevo):
     else:
         logging.warning(f"No se encontro la reserva con ID {idSolicitud}")
 
+def cancelarReservaUsuario(rut):
+    listaReservas = leerReservas()
+
+    reservasCancelables = []
+    for r in listaReservas:
+        if str(r["rutSolicitante"]) == str(rut) and r["estadoSolicitud"] == "Solicitud Realizada":
+            reservasCancelables.append(r)    
+            
+    if not reservasCancelables:
+        print("\nNo tienes solicitudes pendientes en estado 'Solicitud Realizada' para cancelar.")
+        return
+
+    print("\n--- TUS SOLICITUDES PENDIENTES DE APROBACIÓN ---")
+    for r in reservasCancelables:
+        herramienta = busqueda(leerHerramientas(), "id", r["idHerramienta"])
+        nombreH = herramienta["nombre"] if herramienta else "Desconocida"
+        print(f"ID Reserva: {r['idReserva']} | Herramienta: {nombreH} | Fecha: {r['fecha']}")
+
+    idCancelar = input("\nIngrese el ID de la reserva que desea cancelar (o presione Enter para volver): ").strip()
+    if not idCancelar:
+        return
+
+    encontrado = False
+    for r in listaReservas:
+        if str(r["idReserva"]) == idCancelar and str(r["rutSolicitante"]) == str(rut):
+            if r["estadoSolicitud"] == "Solicitud Realizada":
+                r["estadoSolicitud"] = "Cancelado"
+                encontrado = True
+                break
+            else:
+                print("\nError: Esta reserva ya no se puede cancelar porque cambió de estado.")
+                return
+
+    if encontrado:
+        guardarJson("datos/bookings.json", listaReservas)
+        logging.info(f"El usuario RUT {rut} canceló la reserva ID {idCancelar}")
+        print("\n¡Solicitud cancelada con éxito!")
+    else:
+        print("\nNo se encontró ninguna reserva válida con ese ID.")
+
 #utilidades
 
 def busqueda(valores, campo ,porEncontrar):
@@ -348,7 +388,7 @@ def main():
             print("Bienvenido " + dataUsuario["nombre"])
             print("+++++++++++++++++++++++++++++++++++++ \n")
             print("¿Que te gustaria hacer?")
-            print("\n 1.- Ver mis reservas \n 2.- Realizar una reserva \n 3.- Salir")
+            print("\n 1.- Ver mis reservas \n 2.- Realizar una reserva \n 3.- Cancelar una solicitud realizada \n 4.- Salir")
             seleccion = input("\n Ingrese una opción: ")
             if seleccion == "1":
                 print("mis reservas")
@@ -365,6 +405,8 @@ def main():
             
                 input("\nPresiona Enter para continuar...")
             elif seleccion == "3":
+                cancelarReservaUsuario(dataUsuario["rut"])
+            elif seleccion == "4":
                 logging.info("Sesión finalizada por el usuario")
                 break
 

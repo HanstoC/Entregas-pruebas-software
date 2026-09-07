@@ -58,14 +58,19 @@ Dento del programa, se encuentran dos usuarios creados y dos herramientas de for
   ```
 ## Consideraciones:
 - El usuario solo podrá solicitar una herramienta a la vez, si es que solicita alguna otra herramienta teniendo alguna solicitud activa está no se podrá realizar.
-- El usuario puede cancelar su propia solicitud en cualquiero momento.
+- El usuario no puede cancelar su propia reserva desde su menú. Toda gestión sobre el estado de la solicitud (Aprobar, Rechazar, Entregar, Cancelar o Marcar Devuelto) debe ser realizada por el Encargado.
 - Las reservas solo podrán ser de un solo día
 - la opción consultar prestamos entrega la lista historica de prestamos que han ocurrido en el departamento
 - la opcion revisar solicitudes, solo muestra solicitudes que tienen fecha superior o igual a la de hoy para poder gestionarlas.
-- cada reserva puede tener 3 estados:
-    - Activa: la reserva esta correctamente realizada y esta esperando a que se concrete el prestamo
-    - Cancelada: La máquina no estaba disponible por lo que se cancela automaticamente
-    - enEjecucion: La maquina reservada se encuentra prestada por lo que la reserva se encuentra en ejecución
+- Si un préstamo en estado Entregado supera su fecha de entrega esperada, pasa automáticamente a estado Atraso generando una multa acumulativa por día vencido ($5.000 / día).
+- cada reserva puede tener 7 estados:
+  - Solicitud Realizada: Estado inicial cuando un usuario realiza la reserva. Se encuentra a la espera de ser revisada y gestionada por el Encargado.
+  - Aprobado: La solicitud fue aceptada por el Encargado del departamento y queda lista para el retiro o entrega de la herramienta.
+  - Entregado: La herramienta fue físicamente prestada al usuario y la reserva se encuentra actualmente en curso.
+  - Atraso: Estado automático asignado por el sistema cuando la herramienta no ha sido devuelta y la fechaEntregaEsperada ya venció. En este estado se calcula una penalización monetaria por cada día de retraso.
+  - Devuelto: La herramienta fue restituida con éxito por el usuario. Registra la fechaDevolucionReal y finaliza la reserva.
+  - Cancelado: La solicitud fue anulada por el propio usuario o cancelada automáticamente por el sistema si no se pudo concretar.
+  - Rechazado: La solicitud fue denegada por el Encargado durante el proceso de revisión.
 
 ## Dependencias utilizadas:
 
